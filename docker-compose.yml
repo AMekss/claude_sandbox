@@ -1,0 +1,8 @@
+services:
+  claude:
+    build:
+      context: .
+    volumes:
+      - ..:/code
+    command:
+      ["sleep", "infinity"]
