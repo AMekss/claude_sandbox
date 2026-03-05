@@ -1,9 +1,13 @@
+volumes:
+  claude-config:
+
 services:
   sandbox:
     build:
       context: .
     volumes:
       - ..:/code
+      - claude-config:/root/.claude
       - ./skills:/root/.claude/skills
     command:
       ["sleep", "infinity"]
