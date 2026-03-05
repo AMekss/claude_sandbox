@@ -1,5 +1,5 @@
 services:
-  claude:
+  sandbox:
     build:
       context: .
     volumes:
