@@ -1,13 +1,65 @@
 volumes:
   claude-config:
 
+networks:
+  claude-net:
+    name: claude-net
+  proxy-net:
+    driver: bridge
+    internal: true  # air-gapped from host network; only containers on this network can reach the proxy
+    ipam:
+      config:
+        - subnet: 172.25.0.0/24
+
 services:
+  socket-proxy:
+    image: wollomatic/socket-proxy:1
+    restart: unless-stopped
+    read_only: true
+    cap_drop: ["ALL"]
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 64m
+    user: "65534:0"  # set to nobody:<docker-gid> — find GID with:
+    # docker run --rm -v /var/run/docker.sock:/var/run/docker.sock alpine stat -c '%g' /var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - proxy-net
+    command:
+      - "-listenip=0.0.0.0"
+      - "-allowfrom=172.25.0.0/24" # allow any container on the internal proxy-net
+      - "-loglevel=info"
+      - "-watchdoginterval=3600"
+      - "-stoponwatchdog"
+      - "-allowhealthcheck"
+      - "-shutdowngracetime=5"
+      # GET/HEAD: version negotiation, list containers, resolve container name -> id, inspect exec result
+      - "-allowGET=/(v1\\..{1,2}/(containers(/[^/]+)?/(json|logs)|exec/[^/]+/json)|(v1\\..{1,2}/)?(_ping|version))"
+      - "-allowHEAD=/(v1\\..{1,2}/)?_ping"
+      # POST: create exec instance + start it (nothing else)
+      - "-allowPOST=/v1\\..{1,2}/(containers/[^/]+/exec|exec/[^/]+/start|exec/[^/]+/resize)"
+    healthcheck:
+      test: ["CMD", "./healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 2
+
   sandbox:
+    mem_limit: 2g
     build:
       context: .
     volumes:
       - ..:/code
       - claude-config:/root/.claude
       - ./skills:/root/.claude/skills
+    networks:
+      - proxy-net
+      - claude-net
+    environment:
+      DOCKER_HOST: tcp://socket-proxy:2375
+    depends_on:
+      socket-proxy:
+        condition: service_healthy
     command:
       ["sleep", "infinity"]
