@@ -13,5 +13,3 @@ ENV PATH="/root/.local/bin:$PATH" \
     COLORTERM=truecolor
 
 RUN curl -fsSL https://claude.ai/install.sh | bash
-
-WORKDIR "code"

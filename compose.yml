@@ -50,7 +50,6 @@ services:
     build:
       context: .
     volumes:
-      - ..:/code
       - claude-config:/root/.claude
       - ./skills:/root/.claude/skills
     networks:
