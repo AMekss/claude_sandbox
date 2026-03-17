@@ -46,7 +46,6 @@ services:
       retries: 2
 
   sandbox:
-    mem_limit: 2g
     build:
       context: .
     volumes:
