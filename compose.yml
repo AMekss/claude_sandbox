@@ -51,6 +51,7 @@ services:
     volumes:
       - claude-config:/root/.claude
       - ./skills:/root/.claude/skills
+      - ..:/code:ro
     networks:
       - proxy-net
       - claude-net
