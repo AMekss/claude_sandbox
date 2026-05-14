@@ -1,2 +1,5 @@
 compose.override.yml
-.claude/
+local_state/claude/**
+local_state/local/**
+!local_state/claude/.keep
+!local_state/local/.keep

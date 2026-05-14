@@ -1,6 +1,3 @@
-volumes:
-  claude-config:
-
 networks:
   claude-net:
     name: claude-net
@@ -49,7 +46,8 @@ services:
     build:
       context: .
     volumes:
-      - claude-config:/root/.claude
+      - ./local_state/claude:/root/.claude
+      - ./local_state/local:/root/.local
       - ./skills:/root/.claude/skills
       - ..:/code:ro
     networks:
